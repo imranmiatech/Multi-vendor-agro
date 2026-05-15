@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProductFilterDto = exports.CreateProductDto = void 0;
 const class_validator_1 = require("class-validator");
+const swagger_1 = require("@nestjs/swagger");
 class CreateProductDto {
     name;
     sku;
@@ -34,95 +35,114 @@ class CreateProductDto {
 }
 exports.CreateProductDto = CreateProductDto;
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: 'Wooden Chair' }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateProductDto.prototype, "name", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 1001 }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], CreateProductDto.prototype, "sku", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 'Oak Wood' }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateProductDto.prototype, "material", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 'Dhaka Warehouse' }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateProductDto.prototype, "location", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 'New' }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateProductDto.prototype, "condition", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: true }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)
 ], CreateProductDto.prototype, "status", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: ['https://example.com/image-1.jpg'] }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsArray)(),
     __metadata("design:type", Array)
 ], CreateProductDto.prototype, "image", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 5000 }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], CreateProductDto.prototype, "price", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 4500 }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], CreateProductDto.prototype, "specialPrice", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: '2026-05-15T00:00:00.000Z' }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsDateString)(),
     __metadata("design:type", Date)
 ], CreateProductDto.prototype, "specialPriceFrom", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: '2026-05-30T00:00:00.000Z' }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsDateString)(),
     __metadata("design:type", Date)
 ], CreateProductDto.prototype, "specialPriceTo", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 20 }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], CreateProductDto.prototype, "stockQuantity", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: ['USD', 'BDT'] }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsArray)(),
     __metadata("design:type", Array)
 ], CreateProductDto.prototype, "allowedCurrency", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 48 }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], CreateProductDto.prototype, "length", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 90 }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], CreateProductDto.prototype, "height", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 52 }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], CreateProductDto.prototype, "width", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 8 }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], CreateProductDto.prototype, "weight", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 'Handcrafted premium chair' }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateProductDto.prototype, "description", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 'Made by local artisans.' }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
@@ -134,16 +154,19 @@ class ProductFilterDto {
 }
 exports.ProductFilterDto = ProductFilterDto;
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 1001 }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], ProductFilterDto.prototype, "sku", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 'furniture' }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], ProductFilterDto.prototype, "category", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 'chair' }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)

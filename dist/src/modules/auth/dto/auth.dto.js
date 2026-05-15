@@ -9,37 +9,79 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ResetPasswordDto = exports.RequestOtpDto = exports.LoginDto = exports.RegisterDto = void 0;
+exports.PasswordResetDto = exports.RequestOtpDto = exports.LoginDto = exports.RegisterDto = void 0;
+const swagger_1 = require("@nestjs/swagger");
+const client_1 = require("@prisma/client");
 const class_validator_1 = require("class-validator");
 class RegisterDto {
-    fullName;
+    name;
     email;
+    phone;
+    age;
     password;
+    role;
+    businessName;
+    businessAddress;
 }
 exports.RegisterDto = RegisterDto;
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: 'Imran Mia' }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], RegisterDto.prototype, "fullName", void 0);
+], RegisterDto.prototype, "name", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: 'imran@example.com' }),
     (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "email", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: '+8801712345678' }),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "phone", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 28 }),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(1),
+    __metadata("design:type", Number)
+], RegisterDto.prototype, "age", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: '123456', minLength: 6 }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MinLength)(6),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "password", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ enum: [client_1.Role.USER, client_1.Role.VENDOR], example: client_1.Role.VENDOR }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(client_1.Role),
+    (0, class_validator_1.IsIn)([client_1.Role.USER, client_1.Role.VENDOR]),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "role", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 'Klwlara Furnitures' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "businessName", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 'Dhaka, Bangladesh' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "businessAddress", void 0);
 class LoginDto {
     email;
     password;
 }
 exports.LoginDto = LoginDto;
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: 'imran@example.com' }),
     (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
 ], LoginDto.prototype, "email", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: '123456' }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], LoginDto.prototype, "password", void 0);
@@ -48,26 +90,30 @@ class RequestOtpDto {
 }
 exports.RequestOtpDto = RequestOtpDto;
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: 'imran@example.com' }),
     (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
 ], RequestOtpDto.prototype, "email", void 0);
-class ResetPasswordDto {
+class PasswordResetDto {
     email;
     otp;
     newPassword;
 }
-exports.ResetPasswordDto = ResetPasswordDto;
+exports.PasswordResetDto = PasswordResetDto;
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: 'imran@example.com' }),
     (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
-], ResetPasswordDto.prototype, "email", void 0);
+], PasswordResetDto.prototype, "email", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: '123456' }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], ResetPasswordDto.prototype, "otp", void 0);
+], PasswordResetDto.prototype, "otp", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: 'newpassword123', minLength: 6 }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MinLength)(6),
     __metadata("design:type", String)
-], ResetPasswordDto.prototype, "newPassword", void 0);
+], PasswordResetDto.prototype, "newPassword", void 0);
 //# sourceMappingURL=auth.dto.js.map

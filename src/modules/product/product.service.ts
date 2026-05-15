@@ -88,7 +88,7 @@ export class ProductService {
                 user: {
                     select: {
                         id: true,
-                        fullName: true,
+                        name: true,
                         email: true,
                     },
                 },
@@ -109,7 +109,7 @@ export class ProductService {
                 user: {
                     select: {
                         id: true,
-                        fullName: true,
+                        name: true,
                         email: true,
                     },
                 },
@@ -149,7 +149,7 @@ export class ProductService {
                 user: {
                     select: {
                         id: true,
-                        fullName: true,
+                        name: true,
                         email: true,
                     },
                 },

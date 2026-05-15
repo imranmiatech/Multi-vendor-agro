@@ -11,28 +11,47 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model User {
-  id                 String    @id @default(uuid())
-  fullName           String
-  email              String    @unique
-  password           String
-  role               Role      @default(USER)
-  hashedRefreshToken String?
-  products           Product[]
+enum Role {
+  USER
+  VENDOR
+  ADMIN
+  SUPERADMIN
+}
 
+enum UserStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id        String     @id @default(uuid())
+  name      String
+  email     String     @unique
+  phone     String     @unique
+  age       Int
+  password  String
+  role      Role       @default(USER)
+  status    UserStatus @default(PENDING)
+
+  // Vendor specific fields
+  businessName    String?
+  businessAddress String?
+
+  // Profile fields
+  image String?
+  bio   String?
+
+  resetToken        String?
+  resetTokenExpiry  DateTime?
+
+  otp               String?
+  otpExpiry         DateTime?
+
+  products  Product[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-
-model PasswordReset {
-  id        String   @id @default(uuid())
-  email     String
-  otp       String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-}
-
-///---------------------------product schema--------------------///
 
 model Product {
   id               String    @id @default(uuid())
@@ -59,14 +78,4 @@ model Product {
   updatedAt        DateTime  @updatedAt
   userId           String
   user             User      @relation(fields: [userId], references: [id])
-}
-
-enum CATEGORY {
-  NEW_ITEM
-  VINTAGE_ITEM
-}
-
-enum Role {
-  ADMIN
-  USER
 }

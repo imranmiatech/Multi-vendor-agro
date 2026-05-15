@@ -4,6 +4,7 @@ const core_1 = require("@nestjs/core");
 const app_module_1 = require("./app.module");
 const common_1 = require("@nestjs/common");
 const cookieParser = require("cookie-parser");
+const swagger_1 = require("@nestjs/swagger");
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     app.use(cookieParser());
@@ -12,7 +13,20 @@ async function bootstrap() {
         forbidNonWhitelisted: true,
         transform: true,
     }));
-    await app.listen(process.env.PORT ?? 3000);
+    const swaggerConfig = new swagger_1.DocumentBuilder()
+        .setTitle('Agro API')
+        .setDescription('API documentation for the Agro backend')
+        .setVersion('1.0')
+        .addBearerAuth()
+        .addCookieAuth('access_token')
+        .build();
+    const document = swagger_1.SwaggerModule.createDocument(app, swaggerConfig);
+    swagger_1.SwaggerModule.setup('api', app, document, {
+        swaggerOptions: {
+            persistAuthorization: true,
+        },
+    });
+    await app.listen(process.env.PORT ?? 5000);
 }
 bootstrap();
 //# sourceMappingURL=main.js.map

@@ -28,6 +28,7 @@ let PrismaService = class PrismaService extends client_1.PrismaClient {
     async onModuleInit() {
         await this.$connect();
         console.log("Database Connected ✅");
+        console.log(this.configService.getOrThrow('DATABASE_URL'));
     }
     async onModuleDestroy() {
         await this.$disconnect();

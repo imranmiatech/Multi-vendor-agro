@@ -7,19 +7,22 @@ export declare class ProductService {
         message: string;
         product: {
             user: {
-                id: string;
                 email: string;
+                id: string;
             };
         } & {
-            length: number | null;
-            id: string;
+            description: string | null;
             name: string;
+            id: string;
+            status: boolean;
+            image: string[];
+            createdAt: Date;
+            updatedAt: Date;
+            length: number | null;
             sku: number | null;
             material: string | null;
             location: string | null;
             condition: string | null;
-            status: boolean;
-            image: string[];
             price: number | null;
             specialPrice: number | null;
             specialPriceFrom: Date | null;
@@ -29,10 +32,7 @@ export declare class ProductService {
             height: number | null;
             width: number | null;
             weight: number | null;
-            description: string | null;
             story: string | null;
-            createdAt: Date;
-            updatedAt: Date;
             userId: string;
         };
     }>;
@@ -41,20 +41,23 @@ export declare class ProductService {
         count: number;
         products: ({
             user: {
-                id: string;
-                fullName: string;
+                name: string;
                 email: string;
+                id: string;
             };
         } & {
-            length: number | null;
-            id: string;
+            description: string | null;
             name: string;
+            id: string;
+            status: boolean;
+            image: string[];
+            createdAt: Date;
+            updatedAt: Date;
+            length: number | null;
             sku: number | null;
             material: string | null;
             location: string | null;
             condition: string | null;
-            status: boolean;
-            image: string[];
             price: number | null;
             specialPrice: number | null;
             specialPriceFrom: Date | null;
@@ -64,10 +67,7 @@ export declare class ProductService {
             height: number | null;
             width: number | null;
             weight: number | null;
-            description: string | null;
             story: string | null;
-            createdAt: Date;
-            updatedAt: Date;
             userId: string;
         })[];
     }>;
@@ -75,20 +75,23 @@ export declare class ProductService {
         message: string;
         product: {
             user: {
-                id: string;
-                fullName: string;
+                name: string;
                 email: string;
+                id: string;
             };
         } & {
-            length: number | null;
-            id: string;
+            description: string | null;
             name: string;
+            id: string;
+            status: boolean;
+            image: string[];
+            createdAt: Date;
+            updatedAt: Date;
+            length: number | null;
             sku: number | null;
             material: string | null;
             location: string | null;
             condition: string | null;
-            status: boolean;
-            image: string[];
             price: number | null;
             specialPrice: number | null;
             specialPriceFrom: Date | null;
@@ -98,10 +101,7 @@ export declare class ProductService {
             height: number | null;
             width: number | null;
             weight: number | null;
-            description: string | null;
             story: string | null;
-            createdAt: Date;
-            updatedAt: Date;
             userId: string;
         };
     }>;
@@ -109,20 +109,23 @@ export declare class ProductService {
         message: string;
         product: {
             user: {
-                id: string;
-                fullName: string;
+                name: string;
                 email: string;
+                id: string;
             };
         } & {
-            length: number | null;
-            id: string;
+            description: string | null;
             name: string;
+            id: string;
+            status: boolean;
+            image: string[];
+            createdAt: Date;
+            updatedAt: Date;
+            length: number | null;
             sku: number | null;
             material: string | null;
             location: string | null;
             condition: string | null;
-            status: boolean;
-            image: string[];
             price: number | null;
             specialPrice: number | null;
             specialPriceFrom: Date | null;
@@ -132,10 +135,7 @@ export declare class ProductService {
             height: number | null;
             width: number | null;
             weight: number | null;
-            description: string | null;
             story: string | null;
-            createdAt: Date;
-            updatedAt: Date;
             userId: string;
         };
     }>;

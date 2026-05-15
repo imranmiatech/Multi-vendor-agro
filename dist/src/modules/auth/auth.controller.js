@@ -16,6 +16,7 @@ exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
 const auth_service_1 = require("./auth.service");
 const auth_dto_1 = require("./dto/auth.dto");
+const swagger_1 = require("@nestjs/swagger");
 let AuthController = class AuthController {
     authService;
     constructor(authService) {
@@ -26,7 +27,7 @@ let AuthController = class AuthController {
     }
     async login(dto, res) {
         const result = await this.authService.login(dto);
-        const { accessToken, refreshToken } = result.tokens;
+        const { accessToken, refreshToken } = result.data.tokens;
         res.cookie('access_token', accessToken, {
             httpOnly: true,
             secure: false,
@@ -38,26 +39,19 @@ let AuthController = class AuthController {
             path: '/auth/refresh',
             sameSite: 'lax',
         });
-        return {
-            success: true,
-            message: 'Login successful',
-            data: {
-                data: {
-                    user: result.user,
-                    tokens: result.tokens,
-                }
-            },
-        };
+        return result;
     }
     async requestOtp(dto) {
-        return this.authService.requestOtp(dto.email);
+        return this.authService.requestOtp(dto);
     }
     async resetPassword(dto) {
-        return this.authService.resetPassword(dto.email, dto.otp, dto.newPassword);
+        return this.authService.resetPassword(dto);
     }
 };
 exports.AuthController = AuthController;
 __decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Register a new user' }),
+    (0, swagger_1.ApiBody)({ type: auth_dto_1.RegisterDto }),
     (0, common_1.Post)('register'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -65,6 +59,8 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "register", null);
 __decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Login and receive JWT tokens' }),
+    (0, swagger_1.ApiBody)({ type: auth_dto_1.LoginDto }),
     (0, common_1.Post)('login'),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Res)({ passthrough: true })),
@@ -73,6 +69,8 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
 __decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Request OTP for password reset' }),
+    (0, swagger_1.ApiBody)({ type: auth_dto_1.RequestOtpDto }),
     (0, common_1.Post)('request-otp'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -80,13 +78,16 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "requestOtp", null);
 __decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Reset password with OTP' }),
+    (0, swagger_1.ApiBody)({ type: auth_dto_1.PasswordResetDto }),
     (0, common_1.Post)('reset-password'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [auth_dto_1.ResetPasswordDto]),
+    __metadata("design:paramtypes", [auth_dto_1.PasswordResetDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "resetPassword", null);
 exports.AuthController = AuthController = __decorate([
+    (0, swagger_1.ApiTags)('Auth'),
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService])
 ], AuthController);

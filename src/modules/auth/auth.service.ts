@@ -1,9 +1,12 @@
-import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, BadRequestException, ForbiddenException, UnauthorizedException } from '@nestjs/common';
+import { Role, UserStatus } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import * as bcrypt from 'bcrypt';
-import { LoginDto, RegisterDto } from './dto/auth.dto';
+import { LoginDto, PasswordResetDto, RegisterDto, RequestOtpDto } from './dto/auth.dto';
 import { JwtService } from '@nestjs/jwt';
 import { MailService } from '../common/mail/mail.service';
+
+const APPROVAL_EXEMPT_ROLES = new Set<Role>([Role.USER, Role.SUPERADMIN]);
 
 @Injectable()
 export class AuthService {
@@ -13,48 +16,92 @@ export class AuthService {
         private readonly mailService: MailService,
     ) { }
 
+    private normalizeEmail(email: string) {
+        return email.trim().toLowerCase();
+    }
+
     async register(dto: RegisterDto) {
-        const { fullName, email, password } = dto;
+        const {
+            name,
+            email: rawEmail,
+            phone,
+            age,
+            password,
+            role = Role.USER,
+            businessName,
+            businessAddress,
+        } = dto;
+        const email = this.normalizeEmail(rawEmail);
+        const trimmedPhone = phone.trim();
+        const trimmedName = name.trim();
+        const trimmedBusinessName = businessName?.trim();
+        const trimmedBusinessAddress = businessAddress?.trim();
+        const status = APPROVAL_EXEMPT_ROLES.has(role)
+            ? UserStatus.APPROVED
+            : UserStatus.PENDING;
 
-        // 1. check if user exists
-        const userExists = await this.prisma.user.findUnique({
-            where: { email },
-        });
+        const [emailExists, phoneExists] = await Promise.all([
+            this.prisma.user.findUnique({
+                where: { email },
+            }),
+            this.prisma.user.findUnique({
+                where: { phone: trimmedPhone },
+            }),
+        ]);
 
-        if (userExists) {
+        if (emailExists) {
             throw new BadRequestException('Email already exists');
         }
 
-        // 2. hash password (VERY IMPORTANT)
+        if (phoneExists) {
+            throw new BadRequestException('Phone already exists');
+        }
+
+        if (role === Role.VENDOR && (!trimmedBusinessName || !trimmedBusinessAddress)) {
+            throw new BadRequestException('Business name and business address are required for vendor registration');
+        }
+
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // 3. create user
         const user = await this.prisma.user.create({
             data: {
-                fullName,
+                name: trimmedName,
                 email,
+                phone: trimmedPhone,
+                age,
                 password: hashedPassword,
+                role,
+                status,
+                businessName: role === Role.VENDOR ? trimmedBusinessName : null,
+                businessAddress: role === Role.VENDOR ? trimmedBusinessAddress : null,
             },
             select: {
                 id: true,
-                fullName: true,
+                name: true,
                 email: true,
+                phone: true,
+                age: true,
+                role: true,
+                status: true,
+                businessName: true,
+                businessAddress: true,
                 createdAt: true,
-                password: true,
             },
         });
 
         return {
-            message: 'User registered successfully',
-            user,
+            success: true,
+            message: status === UserStatus.APPROVED
+                ? 'Registration successful.'
+                : 'Registration submitted successfully. Your account is pending approval.',
+            data: user,
         };
     }
 
-    //////-------------------------login---------------------//
     async login(dto: LoginDto) {
-        const { email, password } = dto;
+        const email = this.normalizeEmail(dto.email);
+        const { password } = dto;
 
-        // 1. find user
         const user = await this.prisma.user.findUnique({
             where: { email },
         });
@@ -63,47 +110,57 @@ export class AuthService {
             throw new UnauthorizedException('Invalid credentials');
         }
 
-        // 2. check password
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
             throw new UnauthorizedException('Invalid credentials');
         }
 
-        // 3. create JWT tokens
+        if (!APPROVAL_EXEMPT_ROLES.has(user.role) && user.status !== UserStatus.APPROVED) {
+            if (user.status === UserStatus.REJECTED) {
+                throw new ForbiddenException('Your account approval has been rejected');
+            }
+
+            throw new ForbiddenException('Your account is pending approval');
+        }
+
         const [accessToken, refreshToken] = await Promise.all([
             this.jwtService.signAsync(
-                { id: user.id, email: user.email },
+                { id: user.id, email: user.email, role: user.role },
                 { expiresIn: '15m' }
             ),
             this.jwtService.signAsync(
-                { id: user.id, email: user.email },
+                { id: user.id, email: user.email, role: user.role },
                 { expiresIn: '7d' }
             ),
         ]);
 
-        // 4. hash and store refresh token
-        const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
-        await this.prisma.user.update({
-            where: { id: user.id },
-            data: { hashedRefreshToken: hashedRefreshToken } as any,
-        });
-
         return {
-            user: {
-                id: user.id,
-                fullName: user.fullName,
-                email: user.email,
-            },
-            tokens: {
-                accessToken,
-                refreshToken,
+            success: true,
+            message: 'Login successful',
+            data: {
+                user: {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    phone: user.phone,
+                    age: user.age,
+                    role: user.role,
+                    status: user.status,
+                    businessName: user.businessName,
+                    businessAddress: user.businessAddress,
+                },
+                tokens: {
+                    accessToken,
+                    refreshToken,
+                },
             },
         };
     }
 
 
-    async requestOtp(email: string) {
+    async requestOtp(dto: RequestOtpDto) {
+        const email = this.normalizeEmail(dto.email);
         const user = await this.prisma.user.findUnique({ where: { email } });
 
         if (!user) {
@@ -115,69 +172,69 @@ export class AuthService {
         const expiresAt = new Date();
         expiresAt.setMinutes(expiresAt.getMinutes() + 10);
 
-        await this.prisma.passwordReset.create({
+        await this.prisma.user.update({
+            where: { email },
             data: {
-                email,
                 otp,
-                expiresAt,
+                otpExpiry: expiresAt,
             },
         });
 
-        // 👉 In real app: send email here
         console.log(`OTP for ${email}: ${otp}`);
 
         await this.mailService.sendOtp(email, otp);
 
-        return { message: 'OTP sent to email' };
+        return {
+            success: true,
+            message: 'OTP sent to email',
+        };
     }
 
-    // 2. RESET PASSWORD
-    async resetPassword(email: string, otp: string, newPassword: string) {
+    async resetPassword(dto: PasswordResetDto) {
+        const email = this.normalizeEmail(dto.email);
+        const otp = dto.otp.trim();
+        const newPassword = dto.newPassword;
+
         try {
-            // 1. find the OTP record
-            const record = await this.prisma.passwordReset.findFirst({
-                where: { email, otp },
-                orderBy: { createdAt: 'desc' },
-            });
-
-            if (!record) {
-                throw new BadRequestException('Invalid or expired OTP');
-            }
-
-            // 2. check expiration
-            if (record.expiresAt < new Date()) {
-                throw new BadRequestException('OTP has expired');
-            }
-
-            // 3. check if user still exists
             const user = await this.prisma.user.findUnique({ where: { email } });
             if (!user) {
                 throw new BadRequestException('User no longer exists');
             }
 
-            // 4. hash new password
+            if (!user.otp || user.otp !== otp || !user.otpExpiry) {
+                throw new BadRequestException('Invalid or expired OTP');
+            }
+
+            if (user.otpExpiry < new Date()) {
+                throw new BadRequestException('OTP has expired');
+            }
+
             if (!newPassword) {
                 throw new BadRequestException('New password is required');
             }
 
             const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-            // 5. update user password
             await this.prisma.user.update({
                 where: { email },
-                data: { password: hashedPassword },
+                data: {
+                    password: hashedPassword,
+                    otp: null,
+                    otpExpiry: null,
+                    resetToken: null,
+                    resetTokenExpiry: null,
+                },
             });
 
-            // 6. cleanup: delete all OTPs for this email
-            await this.prisma.passwordReset.deleteMany({
-                where: { email },
-            });
-
-            return { message: 'Password reset successful' };
+            return {
+                success: true,
+                message: 'Password reset successful',
+            };
         } catch (error) {
             console.error('Reset Password Error:', error);
             if (error instanceof BadRequestException) throw error;
             throw new BadRequestException('Failed to reset password. Please try again.');
         }
     }
+
 }

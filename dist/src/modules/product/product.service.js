@@ -68,7 +68,7 @@ let ProductService = class ProductService {
                 user: {
                     select: {
                         id: true,
-                        fullName: true,
+                        name: true,
                         email: true,
                     },
                 },
@@ -87,7 +87,7 @@ let ProductService = class ProductService {
                 user: {
                     select: {
                         id: true,
-                        fullName: true,
+                        name: true,
                         email: true,
                     },
                 },
@@ -120,7 +120,7 @@ let ProductService = class ProductService {
                 user: {
                     select: {
                         id: true,
-                        fullName: true,
+                        name: true,
                         email: true,
                     },
                 },

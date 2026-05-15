@@ -7,7 +7,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     constructor() {
         super({
             jwtFromRequest: ExtractJwt.fromExtractors([
-                (req) => req?.cookies?.access_token, // 👈 from HTTP-only cookie
+                (req) => req?.cookies?.access_token,
+                ExtractJwt.fromAuthHeaderAsBearerToken(),
             ]),
             secretOrKey: process.env.JWT_SECRET || 'supersecret',
         });
