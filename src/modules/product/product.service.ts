@@ -1,65 +1,147 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Prisma, ProductStatus, Role, UserStatus } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { CreateProductDto } from './dto/product.dto';
-
+import { CloudinaryService } from '../common/cloudinary/cloudinary.service';
+import { UploadedImageFile } from '../common/cloudinary/cloudinary.types';
 
 @Injectable()
 export class ProductService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private readonly cloudinaryService: CloudinaryService,
+    ) { }
 
-    async create(userId: string, dto: CreateProductDto) {
-        // 🔍 1. Basic validation
-        if (!dto.name) {
+    private cleanString(value?: string | null) {
+        const trimmed = value?.trim();
+        return trimmed ? trimmed : null;
+    }
+
+    private async validateProductOwner(userId: string) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                id: true,
+                role: true,
+                status: true,
+            },
+        });
+
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+
+        if (
+            user.role !== Role.VENDOR &&
+            user.role !== Role.ADMIN &&
+            user.role !== Role.SUPERADMIN
+        ) {
+            throw new ForbiddenException('Only vendor or admin users can manage products');
+        }
+
+        if (user.status !== UserStatus.APPROVED) {
+            throw new ForbiddenException('Only approved accounts can manage products');
+        }
+    }
+
+    private buildCreateProductData(
+        dto: CreateProductDto,
+        userId: string,
+        imageUrls: string[],
+    ): Prisma.ProductUncheckedCreateInput {
+        const productName = this.cleanString(dto.productName) ?? this.cleanString(dto.name);
+        const categoryId = this.cleanString(dto.categoryId);
+        const description = this.cleanString(dto.description);
+        const sku = dto.sku != null ? String(dto.sku).trim() : null;
+
+        if (!productName) {
             throw new BadRequestException('Product name is required');
         }
 
-        // 🔍 2. Price validation
-        // if (dto.specialPrice && !dto.price) {
-        //     throw new BadRequestException('Base price is required for special price');
-        // }
+        if (!categoryId) {
+            throw new BadRequestException('Category is required');
+        }
 
-        // if (dto.specialPrice && dto.specialPrice >= dto.specialPrice) {
-        //     throw new BadRequestException('Special price must be less than regular price');
-        // }
+        if (!description) {
+            throw new BadRequestException('Description is required');
+        }
 
-        // // 🔍 3. Special price date validation
-        // if (dto.specialPriceFrom && dto.specialPriceTo) {
-        //     if (new Date(dto.specialPriceFrom) > new Date(dto.specialPriceTo)) {
-        //         throw new BadRequestException('Invalid special price date range');
-        //     }
-        // }
+        if (dto.price == null) {
+            throw new BadRequestException('Price is required');
+        }
 
-        // 🔍 4. Default values
-        const data = {
-            name: dto.name,
-            sku: dto.sku ?? null,
-            material: dto.material ?? null,
-            location: dto.location ?? null,
-            condition: dto.condition ?? null,
-            status: dto.status ?? true,
+        if (!sku) {
+            throw new BadRequestException('SKU is required');
+        }
 
-            image: dto.image ?? [],
-            allowedCurrency: dto.allowedCurrency ?? ['USD'],
-
-            price: dto.price ?? null,
-            specialPrice: dto.specialPrice ?? null,
-            specialPriceFrom: dto.specialPriceFrom ?? null,
-            specialPriceTo: dto.specialPriceTo ?? null,
-
+        return {
+            productName,
+            title: this.cleanString(dto.title),
+            brand: this.cleanString(dto.brand),
+            categoryId,
+            description,
+            sku,
+            price: dto.price,
+            discountPrice: dto.discountPrice ?? dto.specialPrice ?? null,
+            discountStartDate: dto.discountStartDate ?? dto.specialPriceFrom ?? null,
+            discountEndDate: dto.discountEndDate ?? dto.specialPriceTo ?? null,
             stockQuantity: dto.stockQuantity ?? 0,
-
-            length: dto.length ?? null,
-            height: dto.height ?? null,
-            width: dto.width ?? null,
-            weight: dto.weight ?? null,
-
-            description: dto.description ?? null,
-            story: dto.story ?? null,
-
+            images: imageUrls,
+            vendorId: userId,
             userId,
+            status: ProductStatus.PENDING,
         };
+    }
 
-        // 🚀 5. Create product
+    private buildUpdateProductData(
+        dto: CreateProductDto,
+        imageUrls?: string[],
+    ): Prisma.ProductUncheckedUpdateInput {
+        const productName = this.cleanString(dto.productName) ?? this.cleanString(dto.name);
+        const categoryId = this.cleanString(dto.categoryId);
+        const description = this.cleanString(dto.description);
+        const sku = dto.sku != null ? String(dto.sku).trim() : null;
+
+        const data: Prisma.ProductUncheckedUpdateInput = {};
+
+        if (productName !== null) data.productName = productName;
+        if (dto.title !== undefined) data.title = this.cleanString(dto.title);
+        if (dto.brand !== undefined) data.brand = this.cleanString(dto.brand);
+        if (categoryId !== null) data.categoryId = categoryId;
+        if (description !== null) data.description = description;
+        if (sku !== null) data.sku = sku;
+        if (dto.price !== undefined) data.price = dto.price;
+        if (dto.discountPrice !== undefined || dto.specialPrice !== undefined) {
+            data.discountPrice = dto.discountPrice ?? dto.specialPrice ?? null;
+        }
+        if (dto.discountStartDate !== undefined || dto.specialPriceFrom !== undefined) {
+            data.discountStartDate = dto.discountStartDate ?? dto.specialPriceFrom ?? null;
+        }
+        if (dto.discountEndDate !== undefined || dto.specialPriceTo !== undefined) {
+            data.discountEndDate = dto.discountEndDate ?? dto.specialPriceTo ?? null;
+        }
+        if (dto.stockQuantity !== undefined) data.stockQuantity = dto.stockQuantity;
+        if (imageUrls !== undefined) {
+            data.images = imageUrls;
+        } else if (dto.images !== undefined || dto.image !== undefined) {
+            data.images = dto.images ?? dto.image ?? [];
+        }
+        data.status = ProductStatus.PENDING;
+        data.approvedAt = null;
+        data.rejectedAt = null;
+        data.rejectReason = null;
+
+        return data;
+    }
+
+    async create(userId: string, dto: CreateProductDto, files: UploadedImageFile[]) {
+        await this.validateProductOwner(userId);
+        const imageUrls = files.length > 0
+            ? await this.cloudinaryService.uploadProductImages(files)
+            : dto.images ?? dto.image ?? [];
+
+        const data = this.buildCreateProductData(dto, userId, imageUrls);
+
         const product = await this.prisma.product.create({
             data,
             include: {
@@ -125,8 +207,8 @@ export class ProductService {
             product,
         };
     }
-    async update(id: string, dto: CreateProductDto, userId: string) {
-        // 1. check product exists and belongs to user
+    async update(id: string, dto: CreateProductDto, userId: string, files: UploadedImageFile[]) {
+        await this.validateProductOwner(userId);
         const existing = await this.prisma.product.findUnique({
             where: { id },
         });
@@ -135,16 +217,18 @@ export class ProductService {
             throw new NotFoundException('Product not found');
         }
 
-        if (existing.userId !== userId) {
+        const ownerId = existing.userId ?? existing.vendorId;
+        if (ownerId !== userId) {
             throw new BadRequestException('You do not have permission to update this product');
         }
 
-        // 2. update product
+        const imageUrls = files.length > 0
+            ? await this.cloudinaryService.uploadProductImages(files)
+            : undefined;
+
         const updatedProduct = await this.prisma.product.update({
             where: { id },
-            data: {
-                ...dto,
-            },
+            data: this.buildUpdateProductData(dto, imageUrls),
             include: {
                 user: {
                     select: {
@@ -162,7 +246,6 @@ export class ProductService {
         };
     }
     async remove(id: string) {
-        // 1. check if product exists
         const product = await this.prisma.product.findUnique({
             where: { id },
         });
@@ -171,7 +254,6 @@ export class ProductService {
             throw new NotFoundException('Product not found');
         }
 
-        // 2. delete product
         await this.prisma.product.delete({
             where: { id },
         });

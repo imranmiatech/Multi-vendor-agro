@@ -2,120 +2,176 @@ import {
     IsString,
     IsOptional,
     IsNumber,
-    IsBoolean,
     IsArray,
     IsDateString,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
+
+const toOptionalNumber = ({ value }: { value: unknown }) => {
+    if (value === undefined || value === null || value === '') {
+        return undefined;
+    }
+
+    return Number(value);
+};
+
+const toOptionalDateString = ({ value }: { value: unknown }) => {
+    if (value === undefined || value === null || value === '') {
+        return undefined;
+    }
+
+    if (value instanceof Date) {
+        return value.toISOString();
+    }
+
+    return String(value);
+};
+
+const toOptionalStringArray = ({ value }: { value: unknown }) => {
+    if (value === undefined || value === null || value === '') {
+        return undefined;
+    }
+
+    if (Array.isArray(value)) {
+        return value.map(String);
+    }
+
+    if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (!trimmed) {
+            return undefined;
+        }
+
+        if (trimmed.startsWith('[')) {
+            try {
+                const parsed = JSON.parse(trimmed);
+                return Array.isArray(parsed) ? parsed.map(String) : undefined;
+            } catch {
+                return undefined;
+            }
+        }
+
+        return trimmed.split(',').map((item) => item.trim()).filter(Boolean);
+    }
+
+    return undefined;
+};
 
 export class CreateProductDto {
-    @ApiProperty({ example: 'Wooden Chair' })
-    @IsString()
-    name: string;
-
-    @ApiPropertyOptional({ example: 1001 })
-    @IsOptional()
-    @IsNumber()
-    sku?: number;
-
-    @ApiPropertyOptional({ example: 'Oak Wood' })
+    @ApiProperty({ example: 'seed' })
     @IsOptional()
     @IsString()
-    material?: string;
+    productName?: string;
 
-    @ApiPropertyOptional({ example: 'Dhaka Warehouse' })
+    @ApiPropertyOptional({ example: 'Wooden Chair', deprecated: true })
     @IsOptional()
     @IsString()
-    location?: string;
+    name?: string;
 
-    @ApiPropertyOptional({ example: 'New' })
+    @ApiPropertyOptional({ example: 'Premium handcrafted chair' })
     @IsOptional()
     @IsString()
-    condition?: string;
+    title?: string;
 
-    @ApiPropertyOptional({ example: true })
+    @ApiPropertyOptional({ example: 'Acme Furniture' })
     @IsOptional()
-    @IsBoolean()
-    status?: boolean;
+    @IsString()
+    brand?: string;
+
+    @ApiProperty({ example: 'furniture' })
+    @IsOptional()
+    @IsString()
+    categoryId?: string;
+
+    @ApiPropertyOptional({ example: 'SKU-1001' })
+    @IsOptional()
+    @IsString()
+    sku?: string;
+
+    @ApiProperty({ example: 'Handcrafted premium chair' })
+    @IsOptional()
+    @IsString()
+    description?: string;
 
     @ApiPropertyOptional({ example: ['https://example.com/image-1.jpg'] })
     @IsOptional()
     @IsArray()
+    @Transform(toOptionalStringArray)
+    images?: string[];
+
+    @ApiPropertyOptional({ example: ['https://example.com/image-1.jpg'], deprecated: true })
+    @IsOptional()
+    @IsArray()
+    @Transform(toOptionalStringArray)
     image?: string[];
 
-    @ApiPropertyOptional({ example: 5000 })
+    @ApiProperty({ example: 5000 })
     @IsOptional()
     @IsNumber()
+    @Transform(toOptionalNumber)
     price?: number;
 
     @ApiPropertyOptional({ example: 4500 })
     @IsOptional()
     @IsNumber()
+    @Transform(toOptionalNumber)
+    discountPrice?: number;
+
+    @ApiPropertyOptional({ example: 4500, deprecated: true })
+    @IsOptional()
+    @IsNumber()
+    @Transform(toOptionalNumber)
     specialPrice?: number;
 
     @ApiPropertyOptional({ example: '2026-05-15T00:00:00.000Z' })
     @IsOptional()
     @IsDateString()
+    @Transform(toOptionalDateString)
+    discountStartDate?: Date;
+
+    @ApiPropertyOptional({ example: '2026-05-15T00:00:00.000Z', deprecated: true })
+    @IsOptional()
+    @IsDateString()
+    @Transform(toOptionalDateString)
     specialPriceFrom?: Date;
 
     @ApiPropertyOptional({ example: '2026-05-30T00:00:00.000Z' })
     @IsOptional()
     @IsDateString()
+    @Transform(toOptionalDateString)
+    discountEndDate?: Date;
+
+    @ApiPropertyOptional({ example: '2026-05-30T00:00:00.000Z', deprecated: true })
+    @IsOptional()
+    @IsDateString()
+    @Transform(toOptionalDateString)
     specialPriceTo?: Date;
 
     @ApiPropertyOptional({ example: 20 })
     @IsOptional()
     @IsNumber()
+    @Transform(toOptionalNumber)
     stockQuantity?: number;
-
-    @ApiPropertyOptional({ example: ['USD', 'BDT'] })
-    @IsOptional()
-    @IsArray()
-    allowedCurrency?: string[];
-
-    @ApiPropertyOptional({ example: 48 })
-    @IsOptional()
-    @IsNumber()
-    length?: number;
-
-    @ApiPropertyOptional({ example: 90 })
-    @IsOptional()
-    @IsNumber()
-    height?: number;
-
-    @ApiPropertyOptional({ example: 52 })
-    @IsOptional()
-    @IsNumber()
-    width?: number;
-
-    @ApiPropertyOptional({ example: 8 })
-    @IsOptional()
-    @IsNumber()
-    weight?: number;
-
-    @ApiPropertyOptional({ example: 'Handcrafted premium chair' })
-    @IsOptional()
-    @IsString()
-    description?: string;
 
     @ApiPropertyOptional({ example: 'Made by local artisans.' })
     @IsOptional()
     @IsString()
-    story?: string;
+    rejectReason?: string;
 }
 
 export class ProductFilterDto {
-    @ApiPropertyOptional({ example: 1001 })
+    @ApiPropertyOptional({ example: 'SKU-1001' })
     @IsOptional()
-    @IsNumber()
-    sku?: number;
+    @IsString()
+    sku?: string;
 
     @ApiPropertyOptional({ example: 'furniture' })
     @IsOptional()
     @IsString()
-    category?: string;
+    categoryId?: string;
 
-    @ApiPropertyOptional({ example: 'chair' })
+    @ApiPropertyOptional({ example: 'chair', deprecated: true })
     @IsOptional()
     @IsString()
     productType?: string;

@@ -1,26 +1,25 @@
 export declare class CreateProductDto {
-    name: string;
-    sku?: number;
-    material?: string;
-    location?: string;
-    condition?: string;
-    status?: boolean;
+    productName?: string;
+    name?: string;
+    title?: string;
+    brand?: string;
+    categoryId?: string;
+    sku?: string;
+    description?: string;
+    images?: string[];
     image?: string[];
     price?: number;
+    discountPrice?: number;
     specialPrice?: number;
+    discountStartDate?: Date;
     specialPriceFrom?: Date;
+    discountEndDate?: Date;
     specialPriceTo?: Date;
     stockQuantity?: number;
-    allowedCurrency?: string[];
-    length?: number;
-    height?: number;
-    width?: number;
-    weight?: number;
-    description?: string;
-    story?: string;
+    rejectReason?: string;
 }
 export declare class ProductFilterDto {
-    sku?: number;
-    category?: string;
+    sku?: string;
+    categoryId?: string;
     productType?: string;
 }

@@ -15,9 +15,8 @@ const database_module_1 = require("./database/database.module");
 const auth_module_1 = require("./modules/auth/auth.module");
 const user_module_1 = require("./modules/user/user.module");
 const jwt_1 = require("@nestjs/jwt");
-const product_service_1 = require("./modules/product/product.service");
-const product_controller_1 = require("./modules/product/product.controller");
 const product_module_1 = require("./modules/product/product.module");
+const admin_module_1 = require("./modules/admin/admin.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -37,9 +36,10 @@ exports.AppModule = AppModule = __decorate([
             auth_module_1.AuthModule,
             user_module_1.UserModule,
             product_module_1.ProductModule,
+            admin_module_1.AdminModule,
         ],
-        controllers: [app_controller_1.AppController, product_controller_1.ProductController],
-        providers: [app_service_1.AppService, product_service_1.ProductService],
+        controllers: [app_controller_1.AppController],
+        providers: [app_service_1.AppService],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map

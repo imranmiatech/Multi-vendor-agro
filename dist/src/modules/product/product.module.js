@@ -10,11 +10,13 @@ exports.ProductModule = void 0;
 const common_1 = require("@nestjs/common");
 const product_controller_1 = require("./product.controller");
 const product_service_1 = require("./product.service");
+const cloudinary_module_1 = require("../common/cloudinary/cloudinary.module");
 let ProductModule = class ProductModule {
 };
 exports.ProductModule = ProductModule;
 exports.ProductModule = ProductModule = __decorate([
     (0, common_1.Module)({
+        imports: [cloudinary_module_1.CloudinaryModule],
         controllers: [product_controller_1.ProductController],
         providers: [product_service_1.ProductService],
         exports: [product_service_1.ProductService]
